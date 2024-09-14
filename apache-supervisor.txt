@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+set -eu
+
+# Configuration
+pidfile="/var/run/apache2/apache2.pid"  # Adjust based on your distribution
+apache_command="/usr/sbin/apache2 -DFOREGROUND"  # Adjust if necessary
+service_name="apache2"  # Use "httpd" on some distributions (e.g., CentOS)
+
+# Check if Apache is running based on PID file
+function check_apache() {
+    if [ -f "$pidfile" ]; then
+        if ! kill -0 "$(cat $pidfile)" 2>/dev/null; then
+            echo "Apache PID file exists but process is not running."
+            return 1
+        fi
+        return 0
+    fi
+    echo "Apache PID file does not exist."
+    return 1
+}
+
+# Restart Apache service
+function restart_apache() {
+    echo "Restarting Apache service..."
+    sudo systemctl restart $service_name
+}
+
+# Main loop
+while true; do
+    if ! check_apache; then
+        restart_apache
+    fi
+    sleep 60  # Check every 60 seconds
+done
+
+
+/etc/supervisor/conf.d/# cat apache2.conf
+[program:apache_monitor]
+command=/home/pheonix/apache_supervisor.sh
+autostart=true
+autorestart=true
+stderr_logfile=/var/log/apache_monitor.err.log
+stdout_logfile=/var/log/apache_monitor.out.log
+user=root
+
+/etc/supervisor# cat supervisord.conf
+
+[inet_http_server]
+port=*:9001
+username=admin
+password=admin@321
