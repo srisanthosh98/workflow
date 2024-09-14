@@ -1,0 +1,189 @@
+docker ps -a  >> list all container
+docker ps -s  >> list all containers based on size
+
+docker pull < image name >   >> to pull the image from hub
+docker search < image name >   >> search image in the hub
+
+docker create < image name > 
+docker create --name < cont name > < image name >      // used to create containers only create need to start
+
+docker start < cont id >
+docker stop < cont id >
+docker pause < cont id >
+docker unpause < cont id >
+docker restart < cont id >
+docker run < cont id >
+
+Run container in foreground and detached modes
+The Docker container can run in two modes:
+
+1. Foreground mode (default)  >> docker run < image/ con id >    // just a session ctrl +c it ends 
+2. Background or detached mode >> docker run -d < image name/ cont id >
+
+
+>> docker run -d --name < cont name > < image >
+
+
+===============================================================
+
+docker top < cont id >    // to see the running process in container
+
+docker run -d -p < host port>:<cont port > --name < cont name> < image name>           // mapping the container
+
+docker rename < old > < new name >
+
+=====================================================================
+RUN container in interactive mode:
+----------------------------------
+>> docker run -it < image name> /bin/bash   >> we run the container 
+>> docker exec -it < cont id > /bin/bash     >> entering in the running container
+
+we can run the container in 
+1. foreground >> docker run < image name>      // it need manual to create and start a container
+2. detached mode >> docker run -d < imagae name >   // which directly creating container using image
+3. intractive mode >> docker run -it < iamge name > /bin/bash    
+4. trick using tty >> docker run -dt < iamge name>
+
+atlast we can enter using
+>> docker exec -it < image/cont id> /bin/bash
+
+===================================================================================
+>> docker exec -it nginx-container echo "Hello, from container"
+
+>> /bin/bash image container exited so ofter so while running 
+
+docker run -dt < iamge name>
+
+=====================================
+docker system prune -a    >> remove only unused container networks, volumes, and images
+
+docker container prune   >> remove only stopped containers
+
+docker rm -f $(docker ps -aq)  >> forced to remove all running containers
+
+docker rm < cont id >
+docker rmi < image name>
+
+===================================================================================
+FILE transfer
+--------------
+
+>> docker cp < cont id >:< file path in container> <file path to be stored in server>
+
+>> docker cp < file path > < container id>:path
+
+
+===================================================================================
+
+build image from container:
+----------------------------
+
+>> docker commit < container id/name> < image name we need >
+
+=========================================================================================
+
+DOCKER IMAGES:
+--------------
+
+>> docker images 
+>> docker images -a
+>> docker images -q   // list images id only
+
+>> docker build -t <image_name> <context_dir>     // using dockerfile we build an image, prev we use container to image
+
+>> docker build -f </path/to/dockerfilename>  -t <image_name> .  // If your Dockerfile is not in your current directory, you can specify it by adding the --file option:
+
+>>docker build -t <image_name>:<tag or version> .
+
+>> docker build -f <custom_docker_file_name> -t <image_name> .   // Build image using custom-named Dockerfile
+
+>>docker history < image id >   // history of image
+
+>> docker tag <imagename> <newname>:<version>   // rename image
+
+>> docker images -f dangling=true         // To view the list of all dangling images
+
+>> docker image prune  // To clear up dangling images
+
+>> docker rmi $(docker images -f dangling=true -q)
+
+>> docker image prune -a     // Remove dangling and unused images
+==============================================================
+docker logs < cont id >
+docker logs --tail n < cont id >
+docker logs -f < cont id >
+
+
+========================================================================
+
+DOCKER NETWORK:
+---------------
+
+>> docker network ls
+>>docker network create --driver <driver-name> <bridge-name>          // driver-name can be either bridge or overlay, bridge is the default if --driver option is not provided.
+
+ex: docker network create --driver bridge newnetwork
+
+
+>> docker network inspect < network id >
+
+>> sudo docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' < cont id >   // to fetch ip address
+
+>> docker network connect <network_id or network_name> <container_id or container_name>   // Connect container to network
+
+>> docker run -d --network=<network_name or id> <contaienr_name>     // Connect container to network on start
+
+>> docker network disconnect <network_name_or_id> <container_name_or_id>     // Disconnect container from network
+
+>> docker network rm <network_id or network_name>     // Remove network
+
+========================================================================
+
+docker container inspect < cont id >
+docker image inspect < image id >
+docker network inspect < network id >
+docker volume inspect < volume id >
+
+
+=========================================================
+DOCKER VOLUME:
+-------------
+
+>> docker volume create --name volume-name         // To create a new Docker volume
+
+>> docker volume ls      // To list existing volumes
+
+>> docker run -it --name <container-name> -v <volume-name>:<path-in-container-where-volume-is-mounted> <image-name>   // Mount volume using -v flag
+
+>> docker run -it --name <container-name> --mount source=<volume-name>, destination=<path-in-container-where-volume-is-mounted> <image-name>   // Mount volume using --mount flag
+
+>> docker volume inspect <volume-name>
+
+>> docker volume rm <volume-name>
+
+>> docker run -it -v /path/on/host:/path/in/contianer/where/volume/should/be/mounted <image-name>   // Mount volume with bind-mount
+
+>> docker run -it --name <container_name> --mount type=bind,source=/path/on/host/,target=/path/on/container first-image   // Create bind-mount volume using --mount flag
+
+=============================================================================
+
+Docker registry commands:
+-------------------------
+>> docker login
+>> docker push repository_name/imagename:tag       // Push image to registry
+>> docker pull imagename:tag
+
+========================================================================
+
+System-wide Docker commands:
+----------------------------
+>>  docker info
+>> docker stats
+>> docker stats --all
+>> docker version
+>> docker inspect <name or id>
+>> docker system df
+>> docker system prune
+
+========================================================================
+

@@ -1,0 +1,43 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      
+    - name: Set up SSH
+      run: |
+        mkdir -p ~/.ssh
+        if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          HOST=${{ secrets.MAIN_HOST }}
+        elif [ "${{ github.ref }}" == "refs/heads/staging" ]; then
+          echo "${{ secrets.SSH_STAGING_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          HOST=${{ secrets.STAGE_HOST }}
+        fi
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H $HOST >> ~/.ssh/known_hosts 
+          
+    - name: Deployment from main
+      if: github.ref == 'refs/heads/main'
+      run: |
+        rsync -avz -e 'ssh -o StrictHostKeyChecking=no' --delete-after $GITHUB_WORKSPACE ${{ secrets.USERNAME }}@${{ secrets.MAIN_HOST }}:${{ secrets.DESTINATION_PATH }}
+        ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.MAIN_HOST }} 'su - aviusdev -c "cd /var/www/test/avius && npm install && pm2 restart 0"'
+        ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.MAIN_HOST }} 'chown -R aviusdev:aviusdev ${{ secrets.DESTINATION_PATH }}/avius'
+
+    - name: Deployment from staging
+      if: github.ref == 'refs/heads/staging'
+      run: |
+        rsync -avz -e 'ssh -o StrictHostKeyChecking=no' --delete-after $GITHUB_WORKSPACE ${{ secrets.USERNAME }}@${{ secrets.STAGE_HOST }}:${{ secrets.DESTINATION_PATH }}
+        ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.STAGE_HOST }} 'su - aviusdev -c "cd /var/www/test/avius && npm install && pm2 restart 0"'
+        ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.STAGE_HOST }} 'chown -R aviusdev:aviusdev ${{ secrets.DESTINATION_PATH }}/avius'
+
